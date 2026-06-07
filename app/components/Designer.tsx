@@ -52,6 +52,7 @@ export default function Designer() {
   // ----- text tool state -----
   const [text, setText] = useState("HELLO");
   const [textKerning, setTextKerning] = useState(1);
+  const [textScale, setTextScale] = useState(1);
 
   // ----- image tool state -----
   const [imageEl, setImageEl] = useState<HTMLImageElement | null>(null);
@@ -143,7 +144,7 @@ export default function Designer() {
         return null;
       case "text": {
         if (!text || !cursorCell) return null;
-        const all = textCellIndexes(text, textKerning, cursorCell);
+        const all = textCellIndexes(text, textKerning, textScale, cursorCell);
         const paintable = new Set<number>();
         for (const i of all) {
           if (isPaintable(CELLS[i])) paintable.add(i);
@@ -175,6 +176,7 @@ export default function Designer() {
     colorIdx,
     text,
     textKerning,
+    textScale,
     dragStart,
     dragCurrent,
     shapeFilled,
@@ -214,7 +216,7 @@ export default function Designer() {
         case "text": {
           if (!text) return;
           pushHistory(design);
-          const indexes = textCellIndexes(text, textKerning, cell);
+          const indexes = textCellIndexes(text, textKerning, textScale, cell);
           setDesign((d) => {
             const next = cloneDesign(d);
             for (const i of indexes) {
@@ -235,7 +237,7 @@ export default function Designer() {
           break;
       }
     },
-    [tool, colorIdx, design, pushHistory, text, textKerning],
+    [tool, colorIdx, design, pushHistory, text, textKerning, textScale],
   );
 
   const handlePointer = useCallback(
@@ -490,6 +492,8 @@ export default function Designer() {
                 onTextChange={setText}
                 kerning={textKerning}
                 onKerningChange={setTextKerning}
+                scale={textScale}
+                onScaleChange={setTextScale}
               />
             )}
 
@@ -564,20 +568,25 @@ export default function Designer() {
 // ---- helpers used by the designer ----
 
 /** Map a string laid out as 5x7 pixel font onto hex cells starting at the
- * cell under the cursor. Each font pixel becomes one hex tile. The natural
- * column offset of the hex grid gives letters a subtle hand-set feel. */
+ * cell under the cursor. With scale=1 each font pixel is one hex; with
+ * scale=N each pixel becomes an N×N block of hexes. The natural column
+ * offset of the hex grid gives letters a subtle hand-set feel. */
 function textCellIndexes(
   text: string,
   kerning: number,
+  scale: number,
   origin: Cell,
 ): Set<number> {
   const out = new Set<number>();
   const pixels = layoutText(text, kerning);
+  const s = Math.max(1, Math.floor(scale));
   for (const p of pixels) {
-    const targetCol = origin.col + p.x;
-    const targetRow = origin.row + p.y;
-    const cell = cellAt(targetCol, targetRow);
-    if (cell) out.add(cell.index);
+    for (let dy = 0; dy < s; dy++) {
+      for (let dx = 0; dx < s; dx++) {
+        const cell = cellAt(origin.col + p.x * s + dx, origin.row + p.y * s + dy);
+        if (cell) out.add(cell.index);
+      }
+    }
   }
   return out;
 }
@@ -602,11 +611,15 @@ function TextOptions({
   onTextChange,
   kerning,
   onKerningChange,
+  scale,
+  onScaleChange,
 }: {
   text: string;
   onTextChange: (s: string) => void;
   kerning: number;
   onKerningChange: (n: number) => void;
+  scale: number;
+  onScaleChange: (n: number) => void;
 }) {
   return (
     <div className="bg-white/70 backdrop-blur rounded-xl shadow-sm border border-black/5 p-3 flex flex-col gap-2">
@@ -618,8 +631,20 @@ function TextOptions({
         onChange={(e) => onTextChange(e.target.value)}
         placeholder="Type something"
         className="px-2 py-1.5 text-sm border border-black/15 rounded bg-white"
-        maxLength={20}
+        maxLength={40}
       />
+      <label className="text-[11px] text-black/60 flex items-center gap-2">
+        Size
+        <input
+          type="range"
+          min={1}
+          max={4}
+          value={scale}
+          onChange={(e) => onScaleChange(parseInt(e.target.value, 10))}
+          className="flex-1"
+        />
+        <span className="tabular-nums w-8">{scale}×</span>
+      </label>
       <label className="text-[11px] text-black/60 flex items-center gap-2">
         Letter spacing
         <input

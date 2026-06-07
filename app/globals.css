@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f5efe6;
+  --foreground: #1a1a1a;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Subtle paper-like texture for the workspace */
+.workspace-bg {
+  background-color: #efe7d8;
+  background-image:
+    radial-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 18px 18px, 23px 23px;
+  background-position: 0 0, 9px 11px;
+}
+
+/* The mat itself: warm off-white with a soft inner shadow */
+.mat-surface {
+  background: #f3ece0;
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 0, 0, 0.06),
+    inset 0 6px 18px rgba(0, 0, 0, 0.08),
+    0 18px 30px rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+}
+
+/* Hide scrollbars on the swatch palette */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

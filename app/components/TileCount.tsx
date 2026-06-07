@@ -1,7 +1,7 @@
 "use client";
 
-import { PALETTE } from "@/app/lib/colors";
-import { TileCount, countTiles } from "@/app/lib/designState";
+import { PALETTE, colorIndex } from "@/app/lib/colors";
+import { EDGE_COLOR_ID, TileCount, countTiles } from "@/app/lib/designState";
 import { useMemo } from "react";
 
 interface TileCountPanelProps {
@@ -10,9 +10,16 @@ interface TileCountPanelProps {
 
 export default function TileCountPanel({ design }: TileCountPanelProps) {
   const counts = useMemo(() => countTiles(design), [design]);
+  const edgeIdx = colorIndex(EDGE_COLOR_ID);
+
+  // Half-tiles for the locked edge color are baked into the mat, so we
+  // hide them from the per-row count and from the totals.
+  const visible = counts.map((c) =>
+    c.colorIndex === edgeIdx ? { ...c, half: 0 } : c,
+  );
 
   // Sort by total descending so the dominant colors show first.
-  const sorted = [...counts]
+  const sorted = [...visible]
     .filter((c) => c.full + c.half > 0)
     .sort((a, b) => b.full + b.half - (a.full + a.half));
 
@@ -61,21 +68,18 @@ export default function TileCountPanel({ design }: TileCountPanelProps) {
         })}
       </ul>
 
-      <div className="mt-3 pt-2 border-t border-black/10 space-y-1 text-xs">
+      {/* <div className="mt-3 pt-2 border-t border-black/10 space-y-1 text-xs">
         <div className="flex items-center justify-between">
           <span className="text-black/55">Full tiles</span>
           <span className="font-semibold tabular-nums">{totalFull}</span>
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-black/55">Edge half-tiles</span>
-          <span className="font-semibold tabular-nums">{totalHalf}</span>
-        </div>
-      </div>
-
-      <p className="mt-2 text-[10px] text-black/45 leading-snug">
-        The half-tiles and edge wedges form the mat's black woven border —
-        they're part of the base mat and aren't replaceable.
-      </p>
+        {totalHalf > 0 && (
+          <div className="flex items-center justify-between">
+            <span className="text-black/55">Edge half-tiles</span>
+            <span className="font-semibold tabular-nums">{totalHalf}</span>
+          </div>
+        )}
+      </div> */}
     </div>
   );
 }

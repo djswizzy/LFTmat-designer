@@ -350,17 +350,23 @@ export default function Designer() {
   // ----- export PNG -----
   const exportPng = useCallback(() => {
     const SIZE = 24; // px per hex-size unit
-    const padding = SIZE; // 1 unit padding around mat
+    const BEZEL = 0.9; // hex-size units; matches HexMat.tsx
+    const padding = Math.round((BEZEL + 0.5) * SIZE);
     const w = Math.ceil(MAT_WIDTH * SIZE + padding * 2);
     const h = Math.ceil(MAT_HEIGHT * SIZE + padding * 2);
     const canvas = document.createElement("canvas");
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#f3ece0";
+
+    const black = PALETTE[colorIndex("black")].hex;
+    ctx.fillStyle = black;
     ctx.fillRect(0, 0, w, h);
 
     ctx.translate(padding, padding);
+    ctx.fillStyle = "#f3ece0";
+    ctx.fillRect(0, 0, MAT_WIDTH * SIZE, MAT_HEIGHT * SIZE);
+
     for (const cell of CELLS) {
       const verts = hexVertices(cell, 1);
       ctx.beginPath();
@@ -374,6 +380,30 @@ export default function Designer() {
       ctx.strokeStyle = "rgba(0,0,0,0.22)";
       ctx.lineWidth = 1;
       ctx.stroke();
+    }
+
+    // Side wedges (left + right edges) so the export looks like the UI.
+    const SQRT3_PX = Math.sqrt(3);
+    ctx.fillStyle = black;
+    for (let r = 0; r < 17; r++) {
+      const y0 = SQRT3_PX * r * SIZE;
+      const y1 = SQRT3_PX * (r + 1) * SIZE;
+      const yMid = SQRT3_PX * (r + 0.5) * SIZE;
+      // left
+      ctx.beginPath();
+      ctx.moveTo(0, y0);
+      ctx.lineTo(0.5 * SIZE, yMid);
+      ctx.lineTo(0, y1);
+      ctx.closePath();
+      ctx.fill();
+      // right
+      const xR = MAT_WIDTH * SIZE;
+      ctx.beginPath();
+      ctx.moveTo(xR, y0);
+      ctx.lineTo(xR - 0.5 * SIZE, yMid);
+      ctx.lineTo(xR, y1);
+      ctx.closePath();
+      ctx.fill();
     }
 
     canvas.toBlob((blob) => {
@@ -426,7 +456,7 @@ export default function Designer() {
             Tile Mat Designer
           </h1>
           <p className="text-xs text-black/55">
-            Plan your hexagon mat. 33 × 17 tiles · paint, type, draw, or import an image.
+            Plan your hexagon mat. Paint, type, draw, or import an image.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -494,7 +524,7 @@ export default function Designer() {
           <main className="flex items-center justify-center">
             <div
               className="mat-surface w-full max-w-[1100px] p-3 sm:p-5"
-              style={{ aspectRatio: `${MAT_WIDTH} / ${MAT_HEIGHT + 2}` }}
+              style={{ aspectRatio: `${MAT_WIDTH + 3} / ${MAT_HEIGHT + 3}` }}
             >
               <HexMat
                 design={design}

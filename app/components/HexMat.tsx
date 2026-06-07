@@ -15,7 +15,8 @@ import { PALETTE } from "@/app/lib/colors";
 import { colorIndex } from "@/app/lib/colors";
 import { DesignState } from "@/app/lib/designState";
 
-const MAT_PADDING = 1.0; // padding (in hex-size units) around the mat tiles
+const BEZEL_WIDTH = 0.9; // thickness (in hex-size units) of the black bezel
+const MAT_PADDING = BEZEL_WIDTH + 0.4; // viewBox padding so the bezel + a little air fits
 const EDGE_BLACK = PALETTE[colorIndex("black")].hex;
 
 /**
@@ -154,17 +155,35 @@ export default function HexMat({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       >
-        {/* Mat backdrop: warm off-white surface with a subtle border */}
+        {/* Black bezel: a thick frame around the mat for contrast. */}
         <rect
-          x={-0.05}
-          y={-0.05}
-          width={MAT_WIDTH + 0.1}
-          height={MAT_HEIGHT + 0.1}
-          rx={0.4}
-          ry={0.4}
+          x={-BEZEL_WIDTH}
+          y={-BEZEL_WIDTH}
+          width={MAT_WIDTH + 2 * BEZEL_WIDTH}
+          height={MAT_HEIGHT + 2 * BEZEL_WIDTH}
+          rx={0.55}
+          ry={0.55}
+          fill={EDGE_BLACK}
+        />
+        {/* Subtle inner highlight along the inside of the bezel. */}
+        <rect
+          x={-0.04}
+          y={-0.04}
+          width={MAT_WIDTH + 0.08}
+          height={MAT_HEIGHT + 0.08}
+          rx={0.18}
+          ry={0.18}
+          fill="none"
+          stroke="rgba(255,255,255,0.05)"
+          strokeWidth={0.08}
+        />
+        {/* Mat backdrop: warm off-white surface inside the bezel. */}
+        <rect
+          x={0}
+          y={0}
+          width={MAT_WIDTH}
+          height={MAT_HEIGHT}
           fill="#f3ece0"
-          stroke="rgba(0,0,0,0.18)"
-          strokeWidth={0.06}
         />
 
         {CELLS.map((cell, i) => {
